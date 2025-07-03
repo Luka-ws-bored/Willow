@@ -94,7 +94,7 @@ class WillowAgent:
             logging.error("Gemini API key is not configured.")
             return "Error: Gemini API key not configured."
         try:
-            model = genai.GenerativeModel('gemini-2.0-flash')
+            model = genai.GenerativeModel('gemini-2.5-pro')
             response = model.generate_content(prompt_text)
             logging.info(f"Gemini API call successful for prompt: '{prompt_text[:50]}...'")
             return response.text
