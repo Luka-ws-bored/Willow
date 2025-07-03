@@ -1,4 +1,4 @@
-import openai
+from openai import OpenAI
 import google.generativeai as genai
 import os
 import json
@@ -22,9 +22,10 @@ class WillowAgent:
 
         if not self.openai_api_key:
             logging.warning("OpenAI API key not found. OpenAI features will be unavailable.")
+            self.openai_client = None
         else:
-            openai.api_key = self.openai_api_key
-            logging.info("OpenAI API key loaded.")
+            self.openai_client = OpenAI(api_key=self.openai_api_key)
+            logging.info("OpenAI client initialized.")
 
         if not self.gemini_api_key:
             logging.warning("Gemini API key not found. Gemini features will be unavailable.")
@@ -63,37 +64,37 @@ class WillowAgent:
             return default_settings
 
     def _call_openai(self, prompt_text: str) -> str:
-        if not self.openai_api_key:
-            logging.error("OpenAI API key is not configured.")
-            return "Error: OpenAI API key not configured."
+        if not self.openai_client:
+            logging.error("OpenAI client is not configured.")
+            return "Error: OpenAI client not configured."
         try:
-            # Note: openai.Completion.create is for older models.
-            # For newer chat models like gpt-3.5-turbo or gpt-4, use openai.ChatCompletion.create
-            # Assuming text-davinci-003 or similar is intended based on previous code.
-            response = openai.Completion.create(
-                engine="text-davinci-003",
-                prompt=prompt_text,
+            response = self.openai_client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "user", "content": prompt_text}
+                ],
                 max_tokens=150,
-                temperature=0.7 # Added for some variability
+                temperature=0.7
             )
             logging.info(f"OpenAI API call successful for prompt: '{prompt_text[:50]}...'")
-            return response.choices[0].text.strip()
-        except openai.error.AuthenticationError as e:
-            logging.error(f"OpenAI Authentication Error: {e}. Check your API key.")
-            return "Error: OpenAI Authentication Failed. Please check your API key."
-        except openai.error.RateLimitError as e:
-            logging.error(f"OpenAI Rate Limit Error: {e}. Please check your usage and limits.")
-            return "Error: OpenAI Rate Limit Exceeded. Please try again later."
+            return response.choices[0].message.content.strip()
         except Exception as e:
-            logging.error(f"Error calling OpenAI API: {e}")
-            return f"Error processing with OpenAI: {e}"
+            if "authentication" in str(e).lower():
+                logging.error(f"OpenAI Authentication Error: {e}. Check your API key.")
+                return "Error: OpenAI Authentication Failed. Please check your API key."
+            elif "rate_limit" in str(e).lower():
+                logging.error(f"OpenAI Rate Limit Error: {e}. Please check your usage and limits.")
+                return "Error: OpenAI Rate Limit Exceeded. Please try again later."
+            else:
+                logging.error(f"Error calling OpenAI API: {e}")
+                return f"Error processing with OpenAI: {e}"
 
     def _call_gemini(self, prompt_text: str) -> str:
         if not self.gemini_api_key:
             logging.error("Gemini API key is not configured.")
             return "Error: Gemini API key not configured."
         try:
-            model = genai.GenerativeModel('gemini-pro')
+            model = genai.GenerativeModel('gemini-2.0-flash')
             response = model.generate_content(prompt_text)
             logging.info(f"Gemini API call successful for prompt: '{prompt_text[:50]}...'")
             return response.text
