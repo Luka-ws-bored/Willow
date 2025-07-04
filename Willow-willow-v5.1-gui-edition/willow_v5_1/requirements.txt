@@ -1,0 +1,6 @@
+openai
+google-generativeai
+python-dotenv
+gTTS
+rich
+PyQt6

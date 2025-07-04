@@ -1,0 +1,9 @@
+{
+    "theme": "dark",
+    "font_size": 12,
+    "api_preference": "openai",
+    "openai_api_key": "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",
+    "gemini_api_key": "AIzaSyA_gsKm3Bd4QeV23h2qtIKCQaxBPjQ94kg",
+    "mistral_api_key": "FGjSSDLXWKtPXzaTPc6LMUVJCXPwpv6n",
+    "openrouter_api_key": "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"
+}
